@@ -1,37 +1,50 @@
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
 import express from 'express';
 import dotenv from 'dotenv';
 
+// Import Routes
+import movieRoutes from './routes/movie.js';
 
+// Import createLog
+import createLog from './middleware/createLog.js';
 
-
-// configure dotenv
+// Load environment variables
 dotenv.config();
-const PORT = process.env.PORT || 5009;
+const PORT = process.env.PORT || 5003;
 
+// Construct the path to the current directory
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PATH = path.join(__dirname);
 
-
-// initialize express
+// Initialize express
 const app = express();
 
-// parse body 
+// Parse request body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// use routes
+// Use middleware
+app.use(createLog);
 
+// Use routes
+app.use('/movie', movieRoutes);
 
-// error
-app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({ message: 'Internal Server Error' });
-});
-
-// handle 404
+// Handle 404 Page Not Found
 app.use('*', (req, res) => {
-    res.status(404).json({ message: 'Page is not found' });
+    res.status(404).send('404: Page not found');
 });
 
-// listen
+// Handle error 500 Something broke
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Server is down!');
+});
+
+// Routes
+
+// Listen server
 app.listen(PORT, () => {
-    console.log(`Server is up and running on port : ${PORT}`);
+    console.log(`Server is running on port: https://localhost: ${PORT}`);
 });
